@@ -2,20 +2,7 @@
 Backend: Python/Flask kullanıldı, AWS EC2 üzerinde host edildi.
 Frontend: React kullanıldı, AWS S3 üzerinde barındırıldı.
 Veritabanı: MongoDB Atlas kullanıldı.
-<<<<<<< HEAD
-=======
-<<<<<<< HEAD
+Video ve dosyaların drive linki=> https://drive.google.com/drive/folders/1DtLvurqbpj9S7fLmylGxS016kYgvzFR0?usp=sharing
 
 Genel Mimari: "Bu projede çift katmanlı (Web API + Frontend) bir bulut mimarisi kurdum. Monolitik (tek parça) bir yapı yerine, ön yüz ve arka yüzü ayırarak daha ölçeklenebilir bir sistem tasarladım."Frontend (Ön Yüz) - AWS S3: "Kullanıcı arayüzünü React ile geliştirdim. Bu arayüzü sunmak için bir sunucu kiralamak yerine, AWS S3'ün 'Statik Web Sitesi Barındırma' özelliğini kullandım. Böylece sadece dosyalarımı depolamakla kalmadım, düşük maliyetli ve yüksek erişilebilir bir web yayını yapmış oldum."Backend (Arka Yüz) - AWS EC2: "API katmanı için Python ve Flask framework'ünü kullandım. Kodlarımı AWS EC2 üzerinde ayağa kaldırdığım bir Linux (Amazon Linux) sanal sunucusunda barındırıyorum. Sunucuyu 0.0.0.0 portundan dinlemeye açarak dış dünyadan gelen isteklere (S3'teki arayüzümden gelen isteklere) cevap vermesini sağladım."Veritabanı - MongoDB Atlas: "Veri yönetimi için esnek yapısı nedeniyle MongoDB (NoSQL) tercih ettim. EC2 üzerindeki Python API'm, verileri doğrudan bulut tabanlı MongoDB Atlas kümesine (cluster) yazıyor ve okuyor."
-=======
->>>>>>> d3c8e56
-Video => https://drive.google.com/drive/folders/1DtLvurqbpj9S7fLmylGxS016kYgvzFR0?usp=sharing
 
-Backend: Python/Flask kullanıldı, AWS EC2 üzerinde host edildi. Frontend: React kullanıldı, AWS S3 üzerinde barındırıldı. Veritabanı: MongoDB Atlas kullanıldı.
-
-<<<<<<< HEAD
-Genel Mimari: Bu projede çift katmanlı (Web API + Frontend) bir bulut mimarisi kurdum. Monolitik (tek parça) bir yapı yerine, ön yüz ve arka yüzü ayırarak daha ölçeklenebilir bir sistem tasarladım."Frontend (Ön Yüz) - AWS S3: "Kullanıcı arayüzünü React ile geliştirdim. Bu arayüzü sunmak için bir sunucu kiralamak yerine, AWS S3'ün 'Statik Web Sitesi Barındırma' özelliğini kullandım. Böylece sadece dosyalarımı depolamakla kalmadım, düşük maliyetli ve yüksek erişilebilir bir web yayını yapmış oldum."Backend (Arka Yüz) - AWS EC2: "API katmanı için Python ve Flask framework'ünü kullandım. Kodlarımı AWS EC2 üzerinde ayağa kaldırdığım bir Linux (Amazon Linux) sanal sunucusunda barındırıyorum. Sunucuyu 0.0.0.0 portundan dinlemeye açarak dış dünyadan gelen isteklere (S3'teki arayüzümden gelen isteklere) cevap vermesini sağladım."Veritabanı - MongoDB Atlas: "Veri yönetimi için esnek yapısı nedeniyle MongoDB (NoSQL) tercih ettim. EC2 üzerindeki Python API'm, verileri doğrudan bulut tabanlı MongoDB Atlas kümesine (cluster) yazıyor ve okuyor.
-=======
-Genel Mimari: Bu projede çift katmanlı (Web API + Frontend) bir bulut mimarisi kurdum. Monolitik (tek parça) bir yapı yerine, ön yüz ve arka yüzü ayırarak daha ölçeklenebilir bir sistem tasarladım."Frontend (Ön Yüz) - AWS S3: "Kullanıcı arayüzünü React ile geliştirdim. Bu arayüzü sunmak için bir sunucu kiralamak yerine, AWS S3'ün 'Statik Web Sitesi Barındırma' özelliğini kullandım. Böylece sadece dosyalarımı depolamakla kalmadım, düşük maliyetli ve yüksek erişilebilir bir web yayını yapmış oldum."Backend (Arka Yüz) - AWS EC2: "API katmanı için Python ve Flask framework'ünü kullandım. Kodlarımı AWS EC2 üzerinde ayağa kaldırdığım bir Linux (Amazon Linux) sanal sunucusunda barındırıyorum. Sunucuyu 0.0.0.0 portundan dinlemeye açarak dış dünyadan gelen isteklere (S3'teki arayüzümden gelen isteklere) cevap vermesini sağladım."Veritabanı - MongoDB Atlas: "Veri yönetimi için esnek yapısı nedeniyle MongoDB (NoSQL) tercih ettim. EC2 üzerindeki Python API'm, verileri doğrudan bulut tabanlı MongoDB Atlas kümesine (cluster) yazıyor ve okuyor.
->>>>>>> fe779b7 (değişiklikler yapıldı)
->>>>>>> d3c8e56

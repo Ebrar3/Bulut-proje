@@ -1,0 +1,437 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Titanic Hayatta Kalma Tahmini | PROJE-3 Bulut Bilişim</title>
+  <meta name="description" content="AWS Lambda + Scikit-learn ile Titanic yolcu hayatta kalma tahmini yapan makine öğrenmesi web uygulaması." />
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+
+    :root {
+      --bg: #0a0e1a;
+      --card: #111827;
+      --border: #1f2937;
+      --accent: #6366f1;
+      --accent2: #8b5cf6;
+      --green: #10b981;
+      --red: #ef4444;
+      --text: #f9fafb;
+      --muted: #9ca3af;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 2rem 1rem;
+      background-image:
+        radial-gradient(ellipse at 20% 20%, rgba(99,102,241,0.15) 0%, transparent 50%),
+        radial-gradient(ellipse at 80% 80%, rgba(139,92,246,0.10) 0%, transparent 50%);
+    }
+
+    header {
+      text-align: center;
+      margin-bottom: 2.5rem;
+    }
+    header .badge {
+      display: inline-block;
+      background: rgba(99,102,241,0.2);
+      border: 1px solid rgba(99,102,241,0.4);
+      color: #a5b4fc;
+      font-size: 0.75rem;
+      padding: 4px 12px;
+      border-radius: 99px;
+      margin-bottom: 1rem;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+    }
+    header h1 {
+      font-size: 2.2rem;
+      font-weight: 700;
+      background: linear-gradient(135deg, #c7d2fe, #a5b4fc, #818cf8);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      margin-bottom: 0.5rem;
+    }
+    header p {
+      color: var(--muted);
+      font-size: 1rem;
+    }
+
+    .container {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1.5rem;
+      width: 100%;
+      max-width: 900px;
+    }
+
+    @media (max-width: 640px) {
+      .container { grid-template-columns: 1fr; }
+      header h1 { font-size: 1.6rem; }
+    }
+
+    .card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 1.5rem;
+    }
+
+    .card h2 {
+      font-size: 1rem;
+      font-weight: 600;
+      color: #c7d2fe;
+      margin-bottom: 1.2rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .form-group {
+      margin-bottom: 1rem;
+    }
+    .form-group label {
+      display: block;
+      font-size: 0.8rem;
+      color: var(--muted);
+      margin-bottom: 0.4rem;
+      font-weight: 500;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+    .form-group select,
+    .form-group input {
+      width: 100%;
+      background: #1f2937;
+      border: 1px solid #374151;
+      border-radius: 8px;
+      color: var(--text);
+      font-family: inherit;
+      font-size: 0.95rem;
+      padding: 0.6rem 0.8rem;
+      transition: border-color 0.2s;
+      outline: none;
+    }
+    .form-group select:focus,
+    .form-group input:focus {
+      border-color: var(--accent);
+    }
+
+    button#predictBtn {
+      width: 100%;
+      padding: 0.85rem;
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      border: none;
+      border-radius: 10px;
+      color: white;
+      font-family: inherit;
+      font-size: 1rem;
+      font-weight: 600;
+      cursor: pointer;
+      margin-top: 0.5rem;
+      transition: opacity 0.2s, transform 0.1s;
+      letter-spacing: 0.02em;
+    }
+    button#predictBtn:hover { opacity: 0.9; transform: translateY(-1px); }
+    button#predictBtn:active { transform: translateY(0); }
+    button#predictBtn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+    /* Result card */
+    #resultCard {
+      grid-column: 1 / -1;
+      display: none;
+    }
+    .result-inner {
+      display: flex;
+      align-items: center;
+      gap: 1.5rem;
+    }
+    .result-icon {
+      font-size: 3.5rem;
+      flex-shrink: 0;
+    }
+    .result-text h3 {
+      font-size: 1.4rem;
+      font-weight: 700;
+      margin-bottom: 0.3rem;
+    }
+    .result-text p {
+      color: var(--muted);
+      font-size: 0.9rem;
+    }
+    .prob-bars {
+      margin-top: 1rem;
+    }
+    .prob-row {
+      display: flex;
+      align-items: center;
+      gap: 0.7rem;
+      margin-bottom: 0.5rem;
+    }
+    .prob-label { font-size: 0.8rem; color: var(--muted); width: 150px; flex-shrink: 0; }
+    .prob-bar-bg {
+      flex: 1;
+      height: 8px;
+      background: #1f2937;
+      border-radius: 99px;
+      overflow: hidden;
+    }
+    .prob-bar-fill {
+      height: 100%;
+      border-radius: 99px;
+      transition: width 0.8s ease;
+    }
+    .prob-val { font-size: 0.8rem; font-weight: 600; width: 45px; text-align: right; }
+
+    .survived .prob-bar-fill.s { background: var(--green); }
+    .survived .prob-bar-fill.d { background: #374151; }
+    .died .prob-bar-fill.d { background: var(--red); }
+    .died .prob-bar-fill.s { background: #374151; }
+
+    /* Info card */
+    .info-list { list-style: none; }
+    .info-list li {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 0.5rem 0;
+      border-bottom: 1px solid var(--border);
+      font-size: 0.88rem;
+    }
+    .info-list li:last-child { border-bottom: none; }
+    .info-list .key { color: var(--muted); }
+    .info-list .val { font-weight: 500; color: #a5b4fc; }
+
+    /* Loader */
+    .loader {
+      display: inline-block;
+      width: 16px; height: 16px;
+      border: 2px solid rgba(255,255,255,0.3);
+      border-top-color: white;
+      border-radius: 50%;
+      animation: spin 0.6s linear infinite;
+      vertical-align: middle;
+      margin-right: 6px;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    .error-msg {
+      color: var(--red);
+      background: rgba(239,68,68,0.1);
+      border: 1px solid rgba(239,68,68,0.3);
+      border-radius: 8px;
+      padding: 0.7rem 1rem;
+      font-size: 0.88rem;
+      margin-top: 0.8rem;
+      display: none;
+    }
+
+    footer {
+      margin-top: 3rem;
+      color: var(--muted);
+      font-size: 0.8rem;
+      text-align: center;
+    }
+    footer span { color: #6366f1; }
+  </style>
+</head>
+<body>
+
+<header>
+  <div class="badge">☁️ PROJE-3 — Bulut Bilişim Dersi</div>
+  <h1>🚢 Titanic Hayatta Kalma Tahmini</h1>
+  <p>AWS Lambda + Scikit-learn (Random Forest) — Makine Öğrenmesi API</p>
+</header>
+
+<div class="container">
+
+  <!-- FORM KARTI -->
+  <div class="card">
+    <h2>📋 Yolcu Bilgileri</h2>
+
+    <div class="form-group">
+      <label>Yolcu Sınıfı (Pclass)</label>
+      <select id="Pclass">
+        <option value="1">1. Sınıf (First Class)</option>
+        <option value="2">2. Sınıf (Second Class)</option>
+        <option value="3" selected>3. Sınıf (Third Class)</option>
+      </select>
+    </div>
+
+    <div class="form-group">
+      <label>Cinsiyet (Sex)</label>
+      <select id="Sex">
+        <option value="male" selected>Erkek (Male)</option>
+        <option value="female">Kadın (Female)</option>
+      </select>
+    </div>
+
+    <div class="form-group">
+      <label>Yaş (Age)</label>
+      <input type="number" id="Age" value="25" min="0" max="100" step="1" />
+    </div>
+
+    <div class="form-group">
+      <label>Kardeş / Eş Sayısı (SibSp)</label>
+      <input type="number" id="SibSp" value="0" min="0" max="10" />
+    </div>
+
+    <div class="form-group">
+      <label>Ebeveyn / Çocuk Sayısı (Parch)</label>
+      <input type="number" id="Parch" value="0" min="0" max="10" />
+    </div>
+
+    <div class="form-group">
+      <label>Bilet Ücreti — $ (Fare)</label>
+      <input type="number" id="Fare" value="7.25" min="0" step="0.01" />
+    </div>
+
+    <div class="form-group">
+      <label>Biniş Limanı (Embarked)</label>
+      <select id="Embarked">
+        <option value="S" selected>Southampton (S)</option>
+        <option value="C">Cherbourg (C)</option>
+        <option value="Q">Queenstown (Q)</option>
+      </select>
+    </div>
+
+    <button id="predictBtn" onclick="makePrediction()">🔮 Tahmin Et</button>
+    <div class="error-msg" id="errorMsg"></div>
+  </div>
+
+  <!-- BİLGİ KARTI -->
+  <div class="card">
+    <h2>ℹ️ Proje Bilgisi</h2>
+    <ul class="info-list">
+      <li><span class="key">Backend</span><span class="val">Python 3.11</span></li>
+      <li><span class="key">ML Kütüphane</span><span class="val">Scikit-learn</span></li>
+      <li><span class="key">Model</span><span class="val">Random Forest</span></li>
+      <li><span class="key">Veri Seti</span><span class="val">Titanic (891 kayıt)</span></li>
+      <li><span class="key">Bulut</span><span class="val">AWS Lambda + S3</span></li>
+      <li><span class="key">API</span><span class="val">API Gateway (REST)</span></li>
+      <li><span class="key">Frontend Host</span><span class="val">AWS S3 Static</span></li>
+      <li><span class="key">Test Accuracy</span><span class="val" id="accuracyDisplay">~%83</span></li>
+    </ul>
+
+    <div style="margin-top:1.2rem; padding: 0.8rem; background: rgba(99,102,241,0.1); border-radius: 8px; border: 1px solid rgba(99,102,241,0.2); font-size: 0.83rem; color: var(--muted); line-height:1.6">
+      <strong style="color:#a5b4fc">💡 Nasıl Çalışır?</strong><br>
+      Girdiğiniz yolcu bilgileri <b>API Gateway</b> üzerinden <b>AWS Lambda</b>'ya iletilir.
+      Lambda, <b>S3</b> üzerindeki eğitilmiş modeli yükler ve tahmin yaparak sonucu döndürür.
+    </div>
+  </div>
+
+  <!-- SONUÇ KARTI -->
+  <div class="card" id="resultCard">
+    <h2>🎯 Tahmin Sonucu</h2>
+    <div class="result-inner" id="resultInner"></div>
+    <div class="prob-bars" id="probBars"></div>
+  </div>
+
+</div>
+
+<footer>
+  PROJE-3 — Bulut Bilişim Dersi (3522) &nbsp;|&nbsp;
+  <span>AWS Lambda + Scikit-learn</span> &nbsp;|&nbsp;
+  Titanic Hayatta Kalma Tahmini
+</footer>
+
+<script>
+  // ─── KONFİGÜRASYON ─────────────────────────────────────────
+  // AWS'e deploy ettikten sonra bu URL'yi kendi API Gateway URL'niz ile değiştirin:
+  const API_URL = 'https://XXXXXXXXXX.execute-api.eu-central-1.amazonaws.com/prod/predict';
+  // Yerel test için:
+  // const API_URL = 'http://localhost:5000/predict';
+
+  // ─── TAHMİN FONKSİYONU ─────────────────────────────────────
+  async function makePrediction() {
+    const btn = document.getElementById('predictBtn');
+    const errorDiv = document.getElementById('errorMsg');
+    errorDiv.style.display = 'none';
+
+    const payload = {
+      Pclass:   parseInt(document.getElementById('Pclass').value),
+      Sex:      document.getElementById('Sex').value,
+      Age:      parseFloat(document.getElementById('Age').value),
+      SibSp:    parseInt(document.getElementById('SibSp').value),
+      Parch:    parseInt(document.getElementById('Parch').value),
+      Fare:     parseFloat(document.getElementById('Fare').value),
+      Embarked: document.getElementById('Embarked').value
+    };
+
+    btn.disabled = true;
+    btn.innerHTML = '<span class="loader"></span> Hesaplanıyor...';
+
+    try {
+      const res = await fetch(API_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+
+      if (!res.ok) throw new Error(`Sunucu hatası: ${res.status}`);
+      const data = await res.json();
+      showResult(data);
+
+    } catch (err) {
+      errorDiv.textContent = '⚠️ API bağlantısı kurulamadı. API_URL\'yi kontrol edin veya yerel sunucuyu başlatın.';
+      errorDiv.style.display = 'block';
+      console.error(err);
+    } finally {
+      btn.disabled = false;
+      btn.innerHTML = '🔮 Tekrar Tahmin Et';
+    }
+  }
+
+  function showResult(data) {
+    const survived = data.hayatta_kaldi;
+    const card = document.getElementById('resultCard');
+    const inner = document.getElementById('resultInner');
+    const bars = document.getElementById('probBars');
+
+    const pSurvived = (data.olasilik.hayatta_kaldi * 100).toFixed(1);
+    const pDied = (data.olasilik.hayatini_kaybetti * 100).toFixed(1);
+
+    card.style.display = 'block';
+    card.className = `card ${survived ? 'survived' : 'died'}`;
+
+    inner.innerHTML = `
+      <div class="result-icon">${survived ? '🟢' : '🔴'}</div>
+      <div class="result-text">
+        <h3 style="color:${survived ? 'var(--green)' : 'var(--red)'}">
+          ${survived ? 'Hayatta Kalırdı!' : 'Hayatını Kaybederdi'}
+        </h3>
+        <p>${data.mesaj}</p>
+      </div>
+    `;
+
+    bars.innerHTML = `
+      <div class="prob-row">
+        <span class="prob-label">✅ Hayatta Kalma</span>
+        <div class="prob-bar-bg">
+          <div class="prob-bar-fill s" style="width:${pSurvived}%"></div>
+        </div>
+        <span class="prob-val" style="color:var(--green)">${pSurvived}%</span>
+      </div>
+      <div class="prob-row">
+        <span class="prob-label">❌ Hayatını Kaybetme</span>
+        <div class="prob-bar-bg">
+          <div class="prob-bar-fill d" style="width:${pDied}%"></div>
+        </div>
+        <span class="prob-val" style="color:var(--red)">${pDied}%</span>
+      </div>
+    `;
+
+    card.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+</script>
+</body>
+</html>

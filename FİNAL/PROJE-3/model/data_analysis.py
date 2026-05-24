@@ -3,7 +3,7 @@ PROJE-3: Akıllı Veri Analitiği ve Makine Öğrenmesi
 AŞAMA 1: Keşifsel Veri Analizi (Exploratory Data Analysis - EDA)
 
 Veri Seti: Titanic - Machine Learning from Disaster (Kaggle)
-Kaynak: https://web.stanford.edu/class/archive/cs/cs109/cs109.1166/stuff/titanic.csv
+Kaynak: https://web.stanford.edu/class/archive/cs/cs109/cs109.1166/stuff/titanic.csv  (klasöre de eklenmiştir)
 """
 
 import pandas as pd

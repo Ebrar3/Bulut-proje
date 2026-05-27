@@ -90,7 +90,10 @@ sex_survived.plot(kind='bar', ax=axes[0, 1],
                   edgecolor='white', legend=True)
 axes[0, 1].set_title('Cinsiyete Göre Hayatta Kalma', fontweight='bold')
 axes[0, 1].set_ylabel('Yolcu Sayısı')
-axes[0, 1].set_xticklabels(['Kadın', 'Erkek'], rotation=0)
+# Sıra df.groupby alfabetik gelir: female, male → Kadın, Erkek
+current_labels = [t.get_text() for t in axes[0, 1].get_xticklabels()]
+tr_labels = ['Kadın' if l == 'female' else 'Erkek' for l in current_labels]
+axes[0, 1].set_xticklabels(tr_labels, rotation=0)
 axes[0, 1].legend(['Hayatını Kaybetti', 'Hayatta Kaldı'])
 
 # Grafik 3: Yolcu Sınıfına Göre Hayatta Kalma
@@ -120,7 +123,8 @@ axes[1, 1].set_xlabel('Ücret ($)')
 axes[1, 1].set_ylabel('Yolcu Sayısı')
 
 # Grafik 6: Korelasyon Matrisi
-numeric_cols = ['Survived', 'Pclass', 'Age', 'SibSp', 'Parch', 'Fare']
+# Stanford CSV'sinde sütun adları farklı olabilir, mevcut sayısal sütunları al
+numeric_cols = df.select_dtypes(include='number').columns.tolist()
 corr_data = df[numeric_cols].dropna()
 corr_matrix = corr_data.corr()
 sns.heatmap(corr_matrix, annot=True, fmt='.2f', cmap='RdYlGn',

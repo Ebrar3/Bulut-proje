@@ -68,26 +68,46 @@ if 'Age' in df.columns:
     features_to_use.append('Age')
 
 # SibSp (kardeş/eş sayısı)
+# Stanford CSV'sinde bu sütun 'Siblings/Spouses Aboard' olarak geliyor
 if 'SibSp' in df.columns:
+    sibsp_col = 'SibSp'
+elif 'Siblings/Spouses Aboard' in df.columns:
+    sibsp_col = 'Siblings/Spouses Aboard'
+    df['SibSp'] = df[sibsp_col]   # standart isimle kopyala
+    sibsp_col = 'SibSp'
+else:
+    sibsp_col = None
+
+if sibsp_col:
     features_to_use.append('SibSp')
 
 # Parch (ebeveyn/çocuk sayısı)
+# Stanford CSV'sinde 'Parents/Children Aboard' olarak geliyor
 if 'Parch' in df.columns:
+    parch_col = 'Parch'
+elif 'Parents/Children Aboard' in df.columns:
+    parch_col = 'Parents/Children Aboard'
+    df['Parch'] = df[parch_col]   # standart isimle kopyala
+    parch_col = 'Parch'
+else:
+    parch_col = None
+
+if parch_col:
     features_to_use.append('Parch')
 
-# Fare — eksik değerleri ortalama ile doldur
+# Fare — eksik değerleri medyan ile doldur
 if 'Fare' in df.columns:
     df['Fare'] = df['Fare'].fillna(df['Fare'].median())
     features_to_use.append('Fare')
 
-# Embarked → sayısal (C=0, Q=1, S=2)
+# Embarked → sayısal (C=0, Q=1, S=2)  [Stanford CSV'sinde bu sütun yok, if korumalı]
 if 'Embarked' in df.columns:
     df['Embarked'] = df['Embarked'].fillna(df['Embarked'].mode()[0])
     df['Embarked_encoded'] = df['Embarked'].map({'C': 0, 'Q': 1, 'S': 2})
     features_to_use.append('Embarked_encoded')
 
-# Aile büyüklüğü (feature engineering)
-if 'SibSp' in df.columns and 'Parch' in df.columns:
+# Aile büyüklüğü (feature engineering) — SibSp + Parch + 1
+if sibsp_col and parch_col:
     df['FamilySize'] = df['SibSp'] + df['Parch'] + 1
     features_to_use.append('FamilySize')
 

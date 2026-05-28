@@ -1,0 +1,8 @@
+# Lambda bağımlılık paketi - çok büyük, Git'e gerek yok
+api/lambda_package/
+api/lambda.zip
+
+# Python cache
+__pycache__/
+*.pyc
+*.pyo

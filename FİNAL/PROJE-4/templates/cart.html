@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sepetim — CloudShop</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --primary: #6366f1; --primary-dark: #4f46e5; --bg: #0f0f1a;
+      --surface: #1a1a2e; --surface2: #252540; --text: #e2e8f0;
+      --text-muted: #94a3b8; --success: #10b981; --danger: #ef4444;
+    }
+    body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; }
+
+    nav {
+      background: rgba(26,26,46,0.9); backdrop-filter: blur(12px);
+      border-bottom: 1px solid rgba(99,102,241,0.2);
+      padding: 0 2rem; display: flex; align-items: center;
+      justify-content: space-between; height: 64px;
+      position: sticky; top: 0; z-index: 100;
+    }
+    .nav-logo { font-size: 1.4rem; font-weight: 800; background: linear-gradient(135deg, #6366f1, #a78bfa); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+    .back-btn { background: var(--surface2); color: var(--text); border: 1px solid rgba(99,102,241,0.2); padding: 0.5rem 1.2rem; border-radius: 8px; font-weight: 600; cursor: pointer; text-decoration: none; transition: all 0.2s; }
+    .back-btn:hover { border-color: var(--primary); }
+
+    .container { max-width: 900px; margin: 0 auto; padding: 2rem; }
+    h1 { font-size: 1.8rem; font-weight: 800; margin-bottom: 1.5rem; }
+
+    .server-banner {
+      background: linear-gradient(90deg, rgba(16,185,129,0.1), rgba(16,185,129,0.03));
+      border: 1px solid rgba(16,185,129,0.25); border-radius: 10px;
+      padding: 0.65rem 1.2rem; margin-bottom: 1.5rem;
+      display: flex; align-items: center; gap: 0.75rem; font-size: 0.82rem;
+    }
+    .server-dot { width: 8px; height: 8px; background: var(--success); border-radius: 50%; animation: pulse 2s infinite; }
+    @keyframes pulse { 0%,100%{opacity:1;} 50%{opacity:0.4;} }
+
+    .empty-cart { text-align: center; padding: 4rem 2rem; color: var(--text-muted); }
+    .empty-cart .emoji { font-size: 4rem; display: block; margin-bottom: 1rem; }
+    .go-shop { background: var(--primary); color: white; border: none; padding: 0.75rem 1.5rem; border-radius: 10px; font-weight: 700; cursor: pointer; text-decoration: none; display: inline-block; margin-top: 1rem; transition: all 0.2s; }
+    .go-shop:hover { background: var(--primary-dark); }
+
+    .cart-table { width: 100%; border-collapse: collapse; margin-bottom: 1.5rem; }
+    .cart-table th { text-align: left; padding: 0.75rem; font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-muted); border-bottom: 1px solid rgba(99,102,241,0.15); }
+    .cart-table td { padding: 1rem 0.75rem; border-bottom: 1px solid rgba(255,255,255,0.05); vertical-align: middle; }
+    .cart-table tr:hover td { background: rgba(99,102,241,0.05); }
+    .item-emoji { font-size: 1.8rem; margin-right: 0.75rem; }
+    .item-name { font-weight: 600; font-size: 0.95rem; }
+    .item-quantity { font-family: monospace; font-size: 1rem; font-weight: 700; color: var(--primary); }
+    .item-price { font-weight: 700; color: var(--text); }
+    .remove-btn { background: rgba(239,68,68,0.15); color: #f87171; border: 1px solid rgba(239,68,68,0.25); padding: 0.35rem 0.75rem; border-radius: 6px; cursor: pointer; font-size: 0.8rem; transition: all 0.2s; }
+    .remove-btn:hover { background: rgba(239,68,68,0.3); }
+
+    .cart-summary { background: var(--surface); border: 1px solid rgba(99,102,241,0.2); border-radius: 16px; padding: 1.5rem; }
+    .summary-row { display: flex; justify-content: space-between; padding: 0.5rem 0; color: var(--text-muted); font-size: 0.9rem; }
+    .summary-total { display: flex; justify-content: space-between; padding: 1rem 0 0; margin-top: 0.5rem; border-top: 1px solid rgba(99,102,241,0.2); font-size: 1.3rem; font-weight: 800; color: var(--primary); }
+    .checkout-btn { width: 100%; background: linear-gradient(135deg, var(--primary), var(--primary-dark)); color: white; border: none; padding: 1rem; border-radius: 10px; font-size: 1rem; font-weight: 700; cursor: pointer; margin-top: 1rem; transition: all 0.2s; }
+    .checkout-btn:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(99,102,241,0.4); }
+    .clear-btn { width: 100%; background: transparent; color: var(--text-muted); border: 1px solid rgba(255,255,255,0.1); padding: 0.65rem; border-radius: 10px; font-size: 0.85rem; cursor: pointer; margin-top: 0.5rem; transition: all 0.2s; }
+    .clear-btn:hover { border-color: var(--danger); color: #f87171; }
+  </style>
+</head>
+<body>
+
+<nav>
+  <div class="nav-logo">☁️ CloudShop</div>
+  <a class="back-btn" href="/">← Alışverişe Devam Et</a>
+</nav>
+
+<div class="container">
+  <h1>🛒 Sepetim</h1>
+
+  <div class="server-banner">
+    <div class="server-dot"></div>
+    <span style="color:#94a3b8;">Bağlı Sunucu:</span>
+    <strong style="color:#10b981; font-family:monospace;">{{ server_info.instance_id }}</strong>
+    <span style="color:#94a3b8; margin-left:0.5rem;">/ {{ server_info.ip }}</span>
+  </div>
+
+  {% if cart_items %}
+    <table class="cart-table">
+      <thead>
+        <tr>
+          <th>Ürün</th>
+          <th>Birim Fiyat</th>
+          <th>Adet</th>
+          <th>Toplam</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for item in cart_items %}
+        <tr>
+          <td>
+            <span class="item-emoji">{{ item.emoji }}</span>
+            <span class="item-name">{{ item.name }}</span>
+          </td>
+          <td class="item-price">₺{{ "{:,}".format(item.price) }}</td>
+          <td class="item-quantity">× {{ item.quantity }}</td>
+          <td class="item-price">₺{{ "{:,}".format(item.subtotal) }}</td>
+          <td>
+            <form method="POST" action="/remove_from_cart/{{ item.id }}">
+              <button class="remove-btn" type="submit">🗑 Kaldır</button>
+            </form>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+
+    <div class="cart-summary">
+      <div class="summary-row">
+        <span>Ara Toplam</span>
+        <span>₺{{ "{:,}".format(total) }}</span>
+      </div>
+      <div class="summary-row">
+        <span>Kargo</span>
+        <span style="color:#10b981;">Ücretsiz</span>
+      </div>
+      <div class="summary-total">
+        <span>Toplam</span>
+        <span>₺{{ "{:,}".format(total) }}</span>
+      </div>
+      <button class="checkout-btn" onclick="alert('Bu bir demo uygulamasıdır. Gerçek ödeme sistemi entegre edilmemiştir! 🎓')">
+        ✅ Siparişi Tamamla
+      </button>
+      <form method="POST" action="/clear_cart">
+        <button class="clear-btn" type="submit">Sepeti Temizle</button>
+      </form>
+    </div>
+  {% else %}
+    <div class="empty-cart">
+      <span class="emoji">🛒</span>
+      <h2>Sepetiniz boş</h2>
+      <p>Alışverişe başlamak için ürünlere göz atın.</p>
+      <a class="go-shop" href="/">Ürünlere Git</a>
+    </div>
+  {% endif %}
+</div>
+
+</body>
+</html>

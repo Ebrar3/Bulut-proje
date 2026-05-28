@@ -2,7 +2,7 @@
 PROJE-3: Akıllı Veri Analitiği ve Makine Öğrenmesi
 AŞAMA 2: Model Eğitimi — Titanic Hayatta Kalma Tahmini
 
-Model: Random Forest Classifier (en iyi sonuç verir)
+Model: Gradient Boosting Classifier (en iyi sonuç verir)
 Kaydetme: titanic_model.pkl (joblib ile)
 """
 
@@ -157,7 +157,7 @@ for name, model in models.items():
     print(f"    Test Accuracy: {acc:.4f}")
 
 # ─────────────────────────────────────────
-# 5. EN İYİ MODEL: RANDOM FOREST
+# 5. EN İYİ MODEL: Gradient Boosting
 # ─────────────────────────────────────────
 best_model_name = max(results, key=lambda k: results[k]['test_accuracy'])
 best_model = results[best_model_name]['model']
@@ -180,7 +180,7 @@ print(classification_report(y_test, y_pred_best,
 print("[6] Performans grafikleri oluşturuluyor...")
 
 fig, axes = plt.subplots(1, 3, figsize=(16, 5))
-fig.suptitle('Model Performans Analizi — Random Forest', fontsize=14, fontweight='bold')
+fig.suptitle('Model Performans Analizi — Gradient Boosting', fontsize=14, fontweight='bold')
 
 # Grafik 1: Confusion Matrix
 cm = confusion_matrix(y_test, y_pred_best)

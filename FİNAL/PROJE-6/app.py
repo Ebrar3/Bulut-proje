@@ -32,8 +32,8 @@ app.secret_key = "proje6-bulut-bilisim-2026"
 IMAGE_EXTENSIONS = {"jpg", "jpeg", "png", "gif", "bmp", "webp"}
 VIDEO_EXTENSIONS = {"mp4", "mov", "avi", "mkv"}
 
-# Maksimum dosya boyutu (50MB)
-app.config["MAX_CONTENT_LENGTH"] = 50 * 1024 * 1024
+# Maksimum dosya boyutu (200MB - video için)
+app.config["MAX_CONTENT_LENGTH"] = 200 * 1024 * 1024
 
 def allowed_file(filename, extensions):
     """Dosya uzantısının geçerli olup olmadığını kontrol eder."""

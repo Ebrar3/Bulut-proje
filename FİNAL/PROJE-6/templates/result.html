@@ -1,0 +1,556 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Analiz Sonuçları — CloudVision</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-primary: #0a0e1a;
+            --bg-secondary: #111827;
+            --bg-card: #1a2236;
+            --accent-blue: #3b82f6;
+            --accent-purple: #8b5cf6;
+            --accent-cyan: #06b6d4;
+            --accent-green: #10b981;
+            --accent-orange: #f59e0b;
+            --accent-red: #ef4444;
+            --text-primary: #f1f5f9;
+            --text-secondary: #94a3b8;
+            --text-muted: #64748b;
+            --border: #1e3a5f;
+            --gradient: linear-gradient(135deg, #3b82f6, #8b5cf6);
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            min-height: 100vh;
+            background-image:
+                radial-gradient(ellipse at 20% 20%, rgba(59,130,246,0.06) 0%, transparent 50%),
+                radial-gradient(ellipse at 80% 80%, rgba(139,92,246,0.06) 0%, transparent 50%);
+        }
+
+        header {
+            padding: 1.5rem 2rem;
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            background: rgba(17,24,39,0.8);
+            backdrop-filter: blur(10px);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .logo {
+            font-size: 1.4rem;
+            font-weight: 800;
+            background: var(--gradient);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            text-decoration: none;
+        }
+
+        .back-btn {
+            margin-left: auto;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            color: var(--text-secondary);
+            padding: 0.5rem 1.1rem;
+            border-radius: 999px;
+            font-size: 0.85rem;
+            font-weight: 500;
+            text-decoration: none;
+            transition: all 0.2s;
+            cursor: pointer;
+        }
+
+        .back-btn:hover {
+            border-color: var(--accent-blue);
+            color: var(--accent-blue);
+        }
+
+        /* MAIN */
+        .main {
+            max-width: 1100px;
+            margin: 0 auto;
+            padding: 2.5rem 1.5rem 5rem;
+        }
+
+        /* RESULTS HEADER */
+        .results-header {
+            display: flex;
+            align-items: flex-start;
+            gap: 1.5rem;
+            margin-bottom: 2.5rem;
+            flex-wrap: wrap;
+        }
+
+        .analyzed-image {
+            width: 220px;
+            min-width: 220px;
+            height: 160px;
+            object-fit: cover;
+            border-radius: 14px;
+            border: 1px solid var(--border);
+            box-shadow: 0 8px 30px rgba(0,0,0,0.4);
+        }
+
+        .results-meta h2 {
+            font-size: 1.6rem;
+            font-weight: 800;
+            margin-bottom: 0.5rem;
+        }
+
+        .results-meta h2 span {
+            background: var(--gradient);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .file-info {
+            color: var(--text-muted);
+            font-size: 0.875rem;
+            margin-bottom: 1rem;
+        }
+
+        .summary-chips {
+            display: flex;
+            gap: 0.6rem;
+            flex-wrap: wrap;
+        }
+
+        .summary-chip {
+            display: flex;
+            align-items: center;
+            gap: 0.35rem;
+            padding: 0.35rem 0.9rem;
+            border-radius: 999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+        }
+
+        .chip-blue { background: rgba(59,130,246,0.15); border: 1px solid rgba(59,130,246,0.3); color: var(--accent-blue); }
+        .chip-purple { background: rgba(139,92,246,0.15); border: 1px solid rgba(139,92,246,0.3); color: var(--accent-purple); }
+        .chip-green { background: rgba(16,185,129,0.15); border: 1px solid rgba(16,185,129,0.3); color: var(--accent-green); }
+
+        /* SECTIONS */
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.1rem;
+            font-weight: 700;
+            margin-bottom: 1.2rem;
+            display: flex;
+            align-items: center;
+            gap: 0.6rem;
+            padding-bottom: 0.75rem;
+            border-bottom: 1px solid rgba(255,255,255,0.07);
+        }
+
+        /* LABEL GRID */
+        .labels-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 0.75rem;
+        }
+
+        .label-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 1rem 1.1rem;
+            display: flex;
+            flex-direction: column;
+            gap: 0.6rem;
+            transition: border-color 0.2s;
+        }
+
+        .label-card:hover { border-color: var(--accent-blue); }
+
+        .label-top {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .label-emoji { font-size: 1.4rem; }
+
+        .label-name {
+            font-weight: 600;
+            font-size: 0.9rem;
+        }
+
+        .label-confidence {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            margin-left: auto;
+        }
+
+        .confidence-bar {
+            height: 5px;
+            background: rgba(255,255,255,0.1);
+            border-radius: 999px;
+            overflow: hidden;
+        }
+
+        .confidence-fill {
+            height: 100%;
+            border-radius: 999px;
+            background: var(--gradient);
+            transition: width 0.8s ease;
+        }
+
+        .label-parents {
+            font-size: 0.72rem;
+            color: var(--text-muted);
+        }
+
+        /* FACE CARDS */
+        .faces-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 1rem;
+        }
+
+        .face-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            padding: 1.5rem;
+        }
+
+        .face-card-title {
+            font-size: 0.9rem;
+            font-weight: 700;
+            color: var(--accent-purple);
+            margin-bottom: 1rem;
+        }
+
+        .face-attr {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0.5rem 0;
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+            font-size: 0.875rem;
+        }
+
+        .face-attr:last-child { border-bottom: none; }
+
+        .face-attr-label { color: var(--text-muted); }
+        .face-attr-value { font-weight: 600; }
+
+        .confidence-badge {
+            font-size: 0.72rem;
+            background: rgba(139,92,246,0.15);
+            color: var(--accent-purple);
+            padding: 0.15rem 0.5rem;
+            border-radius: 999px;
+            margin-left: 0.4rem;
+        }
+
+        /* TEXT DETECTIONS */
+        .text-list {
+            display: flex;
+            flex-direction: column;
+            gap: 0.6rem;
+        }
+
+        .text-item {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 0.9rem 1.2rem;
+        }
+
+        .text-content {
+            font-family: 'Courier New', monospace;
+            font-size: 1rem;
+            font-weight: 600;
+            color: var(--accent-cyan);
+            flex: 1;
+        }
+
+        .text-confidence {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+        }
+
+        /* EMPTY STATE */
+        .empty-state {
+            text-align: center;
+            padding: 2.5rem;
+            color: var(--text-muted);
+            background: var(--bg-card);
+            border: 1px dashed var(--border);
+            border-radius: 14px;
+        }
+
+        .empty-state .empty-icon { font-size: 2.5rem; margin-bottom: 0.75rem; }
+
+        /* VIDEO STATUS */
+        .video-status-card {
+            background: var(--bg-card);
+            border: 1px solid rgba(245,158,11,0.4);
+            border-radius: 14px;
+            padding: 2rem;
+            text-align: center;
+        }
+
+        .video-status-card .vid-icon { font-size: 3rem; margin-bottom: 1rem; }
+
+        .spinner {
+            width: 40px;
+            height: 40px;
+            border: 3px solid rgba(59,130,246,0.2);
+            border-top-color: var(--accent-blue);
+            border-radius: 50%;
+            animation: spin 0.9s linear infinite;
+            margin: 1rem auto 0;
+        }
+
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        footer {
+            text-align: center;
+            padding: 2rem;
+            color: var(--text-muted);
+            font-size: 0.8rem;
+            border-top: 1px solid rgba(255,255,255,0.04);
+        }
+    </style>
+</head>
+<body>
+
+<header>
+    <a href="/" class="logo">☁️ CloudVision</a>
+    <a href="/" class="back-btn">← Yeni Analiz</a>
+</header>
+
+<div class="main">
+
+    <!-- SONUÇ BAŞLIĞI -->
+    <div class="results-header">
+        {% if results.file_type == 'image' and results.s3_url %}
+        <img src="{{ results.s3_url }}" alt="Analiz edilen görsel" class="analyzed-image">
+        {% else %}
+        <div style="width:220px;height:160px;background:var(--bg-card);border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:3rem;border:1px solid var(--border);">🎬</div>
+        {% endif %}
+
+        <div class="results-meta">
+            <h2>Analiz <span>Tamamlandı</span></h2>
+            <div class="file-info">📁 {{ results.filename }}</div>
+            <div class="summary-chips">
+                {% if results.labels %}
+                <span class="summary-chip chip-blue">🏷️ {{ results.labels|length }} nesne</span>
+                {% endif %}
+                {% if results.faces %}
+                <span class="summary-chip chip-purple">😊 {{ results.faces|length }} yüz</span>
+                {% endif %}
+                {% if results.text_detections %}
+                <span class="summary-chip chip-green">📝 {{ results.text_detections|length }} metin</span>
+                {% endif %}
+                {% if results.video_job_id %}
+                <span class="summary-chip chip-blue">🎬 Video işleniyor</span>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- ── VİDEO ANALİZİ ── -->
+    {% if results.video_job_id %}
+    <div class="section">
+        <div class="section-title">🎬 Video Analizi</div>
+        <div class="video-status-card" id="video-status-card">
+            <div class="vid-icon">⏳</div>
+            <h3>Video analizi devam ediyor...</h3>
+            <p style="color:var(--text-muted);margin-top:0.5rem;">AWS Rekognition videonuzu işliyor. Bu işlem 1-3 dakika sürebilir.</p>
+            <div class="spinner"></div>
+        </div>
+        <div id="video-labels" style="margin-top:1rem;"></div>
+    </div>
+    {% endif %}
+
+    <!-- ── NESNE TANIMA ── -->
+    {% if results.labels %}
+    <div class="section">
+        <div class="section-title">🏷️ Nesne Tanıma <span style="color:var(--text-muted);font-weight:400;font-size:0.875rem;">({{ results.labels|length }} sonuç)</span></div>
+        <div class="labels-grid">
+            {% for label in results.labels %}
+            <div class="label-card">
+                <div class="label-top">
+                    <span class="label-emoji">{{ label.emoji }}</span>
+                    <span class="label-name">{{ label.name }}</span>
+                    <span class="label-confidence">%{{ label.confidence }}</span>
+                </div>
+                <div class="confidence-bar">
+                    <div class="confidence-fill" style="width: {{ label.confidence }}%"></div>
+                </div>
+                {% if label.parents %}
+                <div class="label-parents">↳ {{ label.parents | join(", ") }}</div>
+                {% endif %}
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% elif results.file_type == 'image' %}
+    <div class="section">
+        <div class="section-title">🏷️ Nesne Tanıma</div>
+        <div class="empty-state">
+            <div class="empty-icon">🔍</div>
+            <p>Bu görüntüde nesne tespit edilemedi veya bu analiz seçilmedi.</p>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- ── YÜZ ANALİZİ ── -->
+    {% if results.faces %}
+    <div class="section">
+        <div class="section-title">😊 Yüz Analizi <span style="color:var(--text-muted);font-weight:400;font-size:0.875rem;">({{ results.faces|length }} yüz bulundu)</span></div>
+        <div class="faces-grid">
+            {% for face in results.faces %}
+            <div class="face-card">
+                <div class="face-card-title">👤 {{ face.index }}. Yüz — %{{ face.confidence }} güven</div>
+                <div class="face-attr">
+                    <span class="face-attr-label">Yaş Aralığı</span>
+                    <span class="face-attr-value">{{ face.age_range }}</span>
+                </div>
+                <div class="face-attr">
+                    <span class="face-attr-label">Cinsiyet</span>
+                    <span class="face-attr-value">
+                        {{ face.gender }}
+                        <span class="confidence-badge">%{{ face.gender_confidence }}</span>
+                    </span>
+                </div>
+                <div class="face-attr">
+                    <span class="face-attr-label">Duygu</span>
+                    <span class="face-attr-value">
+                        {{ face.emotion }}
+                        <span class="confidence-badge">%{{ face.emotion_confidence }}</span>
+                    </span>
+                </div>
+                <div class="face-attr">
+                    <span class="face-attr-label">Gülümseme</span>
+                    <span class="face-attr-value">{{ face.smile }}</span>
+                </div>
+                {% if face.eyeglasses %}
+                <div class="face-attr">
+                    <span class="face-attr-label">Aksesuar</span>
+                    <span class="face-attr-value">{{ face.eyeglasses }}</span>
+                </div>
+                {% endif %}
+                {% if face.beard %}
+                <div class="face-attr">
+                    <span class="face-attr-label">Yüz</span>
+                    <span class="face-attr-value">{{ face.beard }}</span>
+                </div>
+                {% endif %}
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% elif results.file_type == 'image' %}
+    <div class="section">
+        <div class="section-title">😊 Yüz Analizi</div>
+        <div class="empty-state">
+            <div class="empty-icon">👁️</div>
+            <p>Bu görüntüde yüz tespit edilemedi veya bu analiz seçilmedi.</p>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- ── METİN TESPİTİ ── -->
+    {% if results.text_detections %}
+    <div class="section">
+        <div class="section-title">📝 Metin Tespiti <span style="color:var(--text-muted);font-weight:400;font-size:0.875rem;">({{ results.text_detections|length }} satır)</span></div>
+        <div class="text-list">
+            {% for text in results.text_detections %}
+            <div class="text-item">
+                <span style="font-size:1.2rem;">📄</span>
+                <span class="text-content">"{{ text.text }}"</span>
+                <span class="text-confidence">%{{ text.confidence }}</span>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% elif results.file_type == 'image' %}
+    <div class="section">
+        <div class="section-title">📝 Metin Tespiti</div>
+        <div class="empty-state">
+            <div class="empty-icon">🔤</div>
+            <p>Bu görüntüde metin tespit edilemedi veya bu analiz seçilmedi.</p>
+        </div>
+    </div>
+    {% endif %}
+
+</div>
+
+<footer>
+    ☁️ CloudVision — Bulut Bilişim Dersi (3522) PROJE 6 | AWS Rekognition + S3 + Flask
+    <br>Arife Ebrar Üstüner • 23291207 • Mayıs 2026
+</footer>
+
+{% if results.video_job_id %}
+<script>
+// Video analizi tamamlanana kadar her 10 saniyede bir durum sorgula
+const jobId = "{{ results.video_job_id }}";
+const statusCard = document.getElementById('video-status-card');
+const videoLabels = document.getElementById('video-labels');
+
+function checkVideoStatus() {
+    fetch(`/video-status/${jobId}`)
+        .then(r => r.json())
+        .then(data => {
+            if (data.status === 'SUCCEEDED') {
+                statusCard.innerHTML = `<div class="vid-icon">✅</div><h3>Video Analizi Tamamlandı!</h3>`;
+                if (data.labels.length > 0) {
+                    let html = '<div class="labels-grid">';
+                    data.labels.forEach(label => {
+                        html += `
+                        <div class="label-card">
+                            <div class="label-top">
+                                <span class="label-emoji">${label.emoji}</span>
+                                <span class="label-name">${label.name}</span>
+                                <span class="label-confidence">%${label.confidence}</span>
+                            </div>
+                            <div class="confidence-bar">
+                                <div class="confidence-fill" style="width:${label.confidence}%"></div>
+                            </div>
+                            <div class="label-parents">⏱ ${label.timestamp_sec}. saniyede</div>
+                        </div>`;
+                    });
+                    html += '</div>';
+                    videoLabels.innerHTML = html;
+                }
+            } else if (data.status === 'FAILED') {
+                statusCard.innerHTML = `<div class="vid-icon">❌</div><h3>Video analizi başarısız oldu.</h3>`;
+            } else {
+                // Hâlâ işleniyor, 10 saniye sonra tekrar sorgula
+                setTimeout(checkVideoStatus, 10000);
+            }
+        })
+        .catch(() => setTimeout(checkVideoStatus, 15000));
+}
+
+setTimeout(checkVideoStatus, 10000);
+</script>
+{% endif %}
+
+</body>
+</html>

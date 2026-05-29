@@ -1,0 +1,516 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CloudVision — AWS Rekognition ile Görsel Analiz</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-primary: #0a0e1a;
+            --bg-secondary: #111827;
+            --bg-card: #1a2236;
+            --bg-hover: #1f2d45;
+            --accent-blue: #3b82f6;
+            --accent-purple: #8b5cf6;
+            --accent-cyan: #06b6d4;
+            --accent-green: #10b981;
+            --accent-orange: #f59e0b;
+            --text-primary: #f1f5f9;
+            --text-secondary: #94a3b8;
+            --text-muted: #64748b;
+            --border: #1e3a5f;
+            --gradient: linear-gradient(135deg, #3b82f6, #8b5cf6);
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            min-height: 100vh;
+            background-image:
+                radial-gradient(ellipse at 20% 20%, rgba(59,130,246,0.08) 0%, transparent 50%),
+                radial-gradient(ellipse at 80% 80%, rgba(139,92,246,0.08) 0%, transparent 50%);
+        }
+
+        /* HEADER */
+        header {
+            padding: 1.5rem 2rem;
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            background: rgba(17,24,39,0.8);
+            backdrop-filter: blur(10px);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .logo {
+            font-size: 1.4rem;
+            font-weight: 800;
+            background: var(--gradient);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .badge {
+            background: rgba(59,130,246,0.15);
+            border: 1px solid rgba(59,130,246,0.3);
+            color: var(--accent-blue);
+            padding: 0.2rem 0.7rem;
+            border-radius: 999px;
+            font-size: 0.72rem;
+            font-weight: 600;
+            letter-spacing: 0.05em;
+        }
+
+        /* HERO */
+        .hero {
+            text-align: center;
+            padding: 5rem 2rem 3rem;
+        }
+
+        .hero h1 {
+            font-size: clamp(2.2rem, 5vw, 3.5rem);
+            font-weight: 800;
+            line-height: 1.15;
+            margin-bottom: 1.2rem;
+        }
+
+        .hero h1 span {
+            background: var(--gradient);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .hero p {
+            color: var(--text-secondary);
+            font-size: 1.1rem;
+            max-width: 600px;
+            margin: 0 auto 2.5rem;
+            line-height: 1.7;
+        }
+
+        /* FEATURES */
+        .features {
+            display: flex;
+            justify-content: center;
+            gap: 1rem;
+            flex-wrap: wrap;
+            margin-bottom: 3rem;
+        }
+
+        .feature-chip {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            padding: 0.5rem 1.1rem;
+            border-radius: 999px;
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+        }
+
+        /* UPLOAD CARD */
+        .upload-container {
+            max-width: 680px;
+            margin: 0 auto;
+            padding: 0 1.5rem 5rem;
+        }
+
+        .upload-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            padding: 2.5rem;
+            box-shadow: 0 25px 60px rgba(0,0,0,0.4);
+        }
+
+        /* DROP ZONE */
+        .drop-zone {
+            border: 2px dashed var(--border);
+            border-radius: 16px;
+            padding: 3rem 2rem;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .drop-zone:hover, .drop-zone.drag-over {
+            border-color: var(--accent-blue);
+            background: rgba(59,130,246,0.05);
+        }
+
+        .drop-zone-icon {
+            font-size: 3.5rem;
+            margin-bottom: 1rem;
+            display: block;
+        }
+
+        .drop-zone h3 {
+            font-size: 1.2rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+        }
+
+        .drop-zone p {
+            color: var(--text-muted);
+            font-size: 0.875rem;
+        }
+
+        .drop-zone input[type="file"] {
+            position: absolute;
+            inset: 0;
+            opacity: 0;
+            cursor: pointer;
+            width: 100%;
+            height: 100%;
+        }
+
+        /* PREVIEW */
+        .preview-container {
+            margin-top: 1.5rem;
+            display: none;
+        }
+
+        .preview-container.show { display: block; }
+
+        #preview-image {
+            width: 100%;
+            max-height: 280px;
+            object-fit: cover;
+            border-radius: 12px;
+            border: 1px solid var(--border);
+        }
+
+        .preview-info {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            margin-top: 0.75rem;
+            padding: 0.75rem 1rem;
+            background: rgba(16,185,129,0.1);
+            border: 1px solid rgba(16,185,129,0.3);
+            border-radius: 10px;
+            font-size: 0.875rem;
+            color: var(--accent-green);
+        }
+
+        /* OPTIONS */
+        .options-section {
+            margin-top: 1.75rem;
+        }
+
+        .options-title {
+            font-size: 0.875rem;
+            font-weight: 600;
+            color: var(--text-secondary);
+            margin-bottom: 1rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .options-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 0.75rem;
+        }
+
+        .option-card {
+            position: relative;
+        }
+
+        .option-card input[type="checkbox"] {
+            position: absolute;
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .option-card label {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 1rem;
+            background: var(--bg-secondary);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-align: center;
+        }
+
+        .option-card input:checked + label {
+            border-color: var(--accent-blue);
+            background: rgba(59,130,246,0.1);
+            color: var(--accent-blue);
+        }
+
+        .option-card label .opt-icon { font-size: 1.75rem; }
+        .option-card label .opt-name { font-size: 0.8rem; font-weight: 600; }
+        .option-card label .opt-desc { font-size: 0.72rem; color: var(--text-muted); }
+
+        /* SUBMIT BUTTON */
+        .submit-btn {
+            margin-top: 1.75rem;
+            width: 100%;
+            padding: 1rem;
+            background: var(--gradient);
+            border: none;
+            border-radius: 12px;
+            color: white;
+            font-size: 1rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+        }
+
+        .submit-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 30px rgba(59,130,246,0.4);
+        }
+
+        .submit-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        /* FLASH MESSAGES */
+        .flash-messages { margin-bottom: 1.5rem; }
+
+        .flash-error {
+            background: rgba(239,68,68,0.15);
+            border: 1px solid rgba(239,68,68,0.4);
+            color: #fca5a5;
+            padding: 0.875rem 1.25rem;
+            border-radius: 10px;
+            font-size: 0.9rem;
+        }
+
+        /* FOOTER */
+        footer {
+            text-align: center;
+            padding: 2rem;
+            color: var(--text-muted);
+            font-size: 0.8rem;
+            border-top: 1px solid rgba(255,255,255,0.04);
+        }
+
+        /* LOADING OVERLAY */
+        .loading-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(10,14,26,0.85);
+            backdrop-filter: blur(8px);
+            z-index: 999;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+            gap: 1.5rem;
+        }
+
+        .loading-overlay.show { display: flex; }
+
+        .spinner {
+            width: 56px;
+            height: 56px;
+            border: 4px solid rgba(59,130,246,0.2);
+            border-top-color: var(--accent-blue);
+            border-radius: 50%;
+            animation: spin 0.9s linear infinite;
+        }
+
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        .loading-text {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: var(--text-secondary);
+        }
+    </style>
+</head>
+<body>
+
+<!-- LOADING -->
+<div class="loading-overlay" id="loading">
+    <div class="spinner"></div>
+    <div class="loading-text">AWS Rekognition analiz yapıyor...</div>
+    <div style="color: var(--text-muted); font-size: 0.85rem;">Bu işlem 5-30 saniye sürebilir</div>
+</div>
+
+<!-- HEADER -->
+<header>
+    <span class="logo">☁️ CloudVision</span>
+    <span class="badge">AWS Rekognition</span>
+    <span style="margin-left: auto; color: var(--text-muted); font-size: 0.8rem;">Bulut Bilişim Dersi (3522) — PROJE 6</span>
+</header>
+
+<!-- HERO -->
+<div class="hero">
+    <h1>Yapay Zeka ile<br><span>Görsel Analiz</span></h1>
+    <p>
+        Fotoğraf veya video yükle. AWS Rekognition, içindeki nesneleri,
+        yüzleri ve metinleri saniyeler içinde otomatik olarak tanısın.
+    </p>
+    <div class="features">
+        <div class="feature-chip">🏷️ Nesne Tanıma</div>
+        <div class="feature-chip">😊 Yüz Analizi</div>
+        <div class="feature-chip">📝 Metin Tespiti</div>
+        <div class="feature-chip">🎬 Video Analizi</div>
+    </div>
+</div>
+
+<!-- UPLOAD FORM -->
+<div class="upload-container">
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+    <div class="flash-messages">
+        {% for category, message in messages %}
+        <div class="flash-{{ category }}">⚠️ {{ message }}</div>
+        {% endfor %}
+    </div>
+    {% endif %}
+    {% endwith %}
+
+    <div class="upload-card">
+        <form id="upload-form" action="/analyze" method="POST" enctype="multipart/form-data">
+
+            <!-- DROP ZONE -->
+            <div class="drop-zone" id="drop-zone">
+                <span class="drop-zone-icon">🖼️</span>
+                <h3>Dosya yükle veya sürükle bırak</h3>
+                <p>JPG, PNG, GIF, BMP veya MP4 • Maksimum 50MB</p>
+                <input type="file" name="file" id="file-input"
+                       accept=".jpg,.jpeg,.png,.gif,.bmp,.webp,.mp4,.mov,.avi">
+            </div>
+
+            <!-- PREVIEW -->
+            <div class="preview-container" id="preview-container">
+                <img src="" alt="Önizleme" id="preview-image">
+                <div class="preview-info">
+                    ✅ <span id="file-name-display">Dosya seçildi</span>
+                </div>
+            </div>
+
+            <!-- ANALİZ SEÇENEKLERİ -->
+            <div class="options-section">
+                <div class="options-title">Analiz Türlerini Seç</div>
+                <div class="options-grid">
+                    <div class="option-card">
+                        <input type="checkbox" name="labels" id="opt-labels" value="on" checked>
+                        <label for="opt-labels">
+                            <span class="opt-icon">🏷️</span>
+                            <span class="opt-name">Nesneler</span>
+                            <span class="opt-desc">İnsan, araba, hayvan...</span>
+                        </label>
+                    </div>
+                    <div class="option-card">
+                        <input type="checkbox" name="faces" id="opt-faces" value="on" checked>
+                        <label for="opt-faces">
+                            <span class="opt-icon">😊</span>
+                            <span class="opt-name">Yüzler</span>
+                            <span class="opt-desc">Yaş, duygu, özellikler</span>
+                        </label>
+                    </div>
+                    <div class="option-card">
+                        <input type="checkbox" name="text" id="opt-text" value="on" checked>
+                        <label for="opt-text">
+                            <span class="opt-icon">📝</span>
+                            <span class="opt-name">Metinler</span>
+                            <span class="opt-desc">Yazılar, plakalar</span>
+                        </label>
+                    </div>
+                </div>
+            </div>
+
+            <!-- GÖNDER -->
+            <button type="submit" class="submit-btn" id="submit-btn" disabled>
+                🔍 Analizi Başlat
+            </button>
+
+        </form>
+    </div>
+</div>
+
+<footer>
+    ☁️ CloudVision — Bulut Bilişim Dersi (3522) PROJE 6 | AWS Rekognition + S3 + Flask
+    <br>Arife Ebrar Üstüner • 23291207 • Mayıs 2026
+</footer>
+
+<script>
+    const fileInput = document.getElementById('file-input');
+    const dropZone = document.getElementById('drop-zone');
+    const previewContainer = document.getElementById('preview-container');
+    const previewImage = document.getElementById('preview-image');
+    const fileNameDisplay = document.getElementById('file-name-display');
+    const submitBtn = document.getElementById('submit-btn');
+    const form = document.getElementById('upload-form');
+    const loadingOverlay = document.getElementById('loading');
+
+    // Dosya seçilince önizleme göster
+    fileInput.addEventListener('change', function() {
+        const file = this.files[0];
+        if (!file) return;
+
+        fileNameDisplay.textContent = `${file.name} (${(file.size / 1024 / 1024).toFixed(2)} MB)`;
+        submitBtn.disabled = false;
+
+        // Resim önizlemesi
+        if (file.type.startsWith('image/')) {
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                previewImage.src = e.target.result;
+                previewImage.style.display = 'block';
+            };
+            reader.readAsDataURL(file);
+        } else {
+            previewImage.style.display = 'none';
+        }
+
+        previewContainer.classList.add('show');
+        dropZone.querySelector('.drop-zone-icon').textContent = '✅';
+    });
+
+    // Sürükle bırak
+    dropZone.addEventListener('dragover', (e) => {
+        e.preventDefault();
+        dropZone.classList.add('drag-over');
+    });
+
+    dropZone.addEventListener('dragleave', () => {
+        dropZone.classList.remove('drag-over');
+    });
+
+    dropZone.addEventListener('drop', (e) => {
+        e.preventDefault();
+        dropZone.classList.remove('drag-over');
+        if (e.dataTransfer.files.length) {
+            fileInput.files = e.dataTransfer.files;
+            fileInput.dispatchEvent(new Event('change'));
+        }
+    });
+
+    // Form gönderilince loading göster
+    form.addEventListener('submit', function() {
+        loadingOverlay.classList.add('show');
+    });
+</script>
+
+</body>
+</html>

@@ -34,7 +34,7 @@ def upload_to_s3(file_obj, filename):
     """
     s3_key = f"uploads/{filename}"
 
-    # Dosyayı S3'e yükle (public-read)
+    # Dosyayı S3'e yükle
     s3_client.upload_fileobj(
         file_obj,
         BUCKET_NAME,
@@ -44,10 +44,34 @@ def upload_to_s3(file_obj, filename):
         }
     )
 
-    # Public URL oluştur
     region = os.getenv("AWS_REGION", "eu-central-1")
     s3_url = f"https://{BUCKET_NAME}.s3.{region}.amazonaws.com/{s3_key}"
+    return s3_key, s3_url
 
+
+def upload_bytes_to_s3(data_bytes, filename):
+    """
+    Byte verilerini (video karesi gibi) doğrudan S3'e yükler.
+
+    Args:
+        data_bytes: bytes — JPEG/PNG byte verisi
+        filename: S3'e kaydedilecek dosya adı
+
+    Returns:
+        tuple: (s3_key, public_url)
+    """
+    import io
+    s3_key = filename  # Zaten "frames/xxx.jpg" formatında geliyor
+
+    s3_client.upload_fileobj(
+        io.BytesIO(data_bytes),
+        BUCKET_NAME,
+        s3_key,
+        ExtraArgs={"ContentType": "image/jpeg"}
+    )
+
+    region = os.getenv("AWS_REGION", "eu-central-1")
+    s3_url = f"https://{BUCKET_NAME}.s3.{region}.amazonaws.com/{s3_key}"
     return s3_key, s3_url
 
 

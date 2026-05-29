@@ -366,24 +366,46 @@
                 {% if results.text_detections %}
                 <span class="summary-chip chip-green">📝 {{ results.text_detections|length }} metin</span>
                 {% endif %}
-                {% if results.video_job_id %}
-                <span class="summary-chip chip-blue">🎬 Video işleniyor</span>
+                {% if results.video_frames %}
+                <span class="summary-chip chip-blue">🎬 {{ results.video_frames|length }} video karesi analiz edildi</span>
                 {% endif %}
             </div>
         </div>
     </div>
 
-    <!-- ── VİDEO ANALİZİ ── -->
-    {% if results.video_job_id %}
+    <!-- ── VİDEO KARE ANALİZİ ── -->
+    {% if results.video_frames %}
     <div class="section">
-        <div class="section-title">🎬 Video Analizi</div>
-        <div class="video-status-card" id="video-status-card">
-            <div class="vid-icon">⏳</div>
-            <h3>Video analizi devam ediyor...</h3>
-            <p style="color:var(--text-muted);margin-top:0.5rem;">AWS Rekognition videonuzu işliyor. Bu işlem 1-3 dakika sürebilir.</p>
-            <div class="spinner"></div>
+        <div class="section-title">🎬 Video Kare Analizi <span style="color:var(--text-muted);font-weight:400;font-size:0.875rem;">({{ results.video_frames|length }} kare)</span></div>
+        {% for frame in results.video_frames %}
+        <div style="margin-bottom:2rem;">
+            <div style="display:flex;align-items:center;gap:0.75rem;margin-bottom:1rem;">
+                <div style="width:36px;height:36px;background:var(--gradient);border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:0.9rem;">{{ frame.frame_index }}</div>
+                <span style="font-weight:600;">{{ frame.frame_index }}. Kare</span>
+                {% if frame.s3_url %}
+                <img src="{{ frame.s3_url }}" style="height:60px;border-radius:8px;border:1px solid var(--border);margin-left:auto;" alt="Kare {{ frame.frame_index }}">
+                {% endif %}
+            </div>
+            {% if frame.labels %}
+            <div class="labels-grid">
+                {% for label in frame.labels %}
+                <div class="label-card">
+                    <div class="label-top">
+                        <span class="label-emoji">{{ label.emoji }}</span>
+                        <span class="label-name">{{ label.name }}</span>
+                        <span class="label-confidence">%{{ label.confidence }}</span>
+                    </div>
+                    <div class="confidence-bar">
+                        <div class="confidence-fill" style="width: {{ label.confidence }}%"></div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            {% else %}
+            <div class="empty-state"><p>Bu karede nesne tespit edilemedi.</p></div>
+            {% endif %}
         </div>
-        <div id="video-labels" style="margin-top:1rem;"></div>
+        {% endfor %}
     </div>
     {% endif %}
 
@@ -505,52 +527,6 @@
     ☁️ CloudVision — Bulut Bilişim Dersi (3522) PROJE 6 | AWS Rekognition + S3 + Flask
     <br>Arife Ebrar Üstüner • 23291207 • Mayıs 2026
 </footer>
-
-{% if results.video_job_id %}
-<script>
-// Video analizi tamamlanana kadar her 10 saniyede bir durum sorgula
-const jobId = "{{ results.video_job_id }}";
-const statusCard = document.getElementById('video-status-card');
-const videoLabels = document.getElementById('video-labels');
-
-function checkVideoStatus() {
-    fetch(`/video-status/${jobId}`)
-        .then(r => r.json())
-        .then(data => {
-            if (data.status === 'SUCCEEDED') {
-                statusCard.innerHTML = `<div class="vid-icon">✅</div><h3>Video Analizi Tamamlandı!</h3>`;
-                if (data.labels.length > 0) {
-                    let html = '<div class="labels-grid">';
-                    data.labels.forEach(label => {
-                        html += `
-                        <div class="label-card">
-                            <div class="label-top">
-                                <span class="label-emoji">${label.emoji}</span>
-                                <span class="label-name">${label.name}</span>
-                                <span class="label-confidence">%${label.confidence}</span>
-                            </div>
-                            <div class="confidence-bar">
-                                <div class="confidence-fill" style="width:${label.confidence}%"></div>
-                            </div>
-                            <div class="label-parents">⏱ ${label.timestamp_sec}. saniyede</div>
-                        </div>`;
-                    });
-                    html += '</div>';
-                    videoLabels.innerHTML = html;
-                }
-            } else if (data.status === 'FAILED') {
-                statusCard.innerHTML = `<div class="vid-icon">❌</div><h3>Video analizi başarısız oldu.</h3>`;
-            } else {
-                // Hâlâ işleniyor, 10 saniye sonra tekrar sorgula
-                setTimeout(checkVideoStatus, 10000);
-            }
-        })
-        .catch(() => setTimeout(checkVideoStatus, 15000));
-}
-
-setTimeout(checkVideoStatus, 10000);
-</script>
-{% endif %}
 
 </body>
 </html>

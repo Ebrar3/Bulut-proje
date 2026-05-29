@@ -13,14 +13,9 @@ from werkzeug.utils import secure_filename
 from dotenv import load_dotenv
 
 # Servisler
-from s3_service import upload_to_s3, delete_from_s3
-from rekognition_service import (
-    detect_labels,
-    detect_faces,
-    detect_text,
-    start_video_label_detection,
-    get_video_label_results
-)
+from s3_service import upload_to_s3, upload_bytes_to_s3, delete_from_s3
+from rekognition_service import detect_labels, detect_faces, detect_text
+from video_service import extract_frames
 
 # .env dosyasından ortam değişkenlerini yükle
 load_dotenv()
@@ -98,7 +93,7 @@ def analyze():
             "labels": [],
             "faces": [],
             "text_detections": [],
-            "video_job_id": None
+            "video_frames": []  # Video karelerinin analiz sonuçları
         }
 
         if is_image(file.filename):
@@ -111,9 +106,30 @@ def analyze():
                 results["text_detections"] = detect_text(bucket_name, s3_key)
 
         else:
-            # ── Video Analizi (Asenkron) ──
-            job_id = start_video_label_detection(bucket_name, s3_key)
-            results["video_job_id"] = job_id
+            # ── Video Analizi: Kareler çıkar, birleşik sonuç üret ──
+            file.seek(0)
+            frames = extract_frames(file, num_frames=5)
+
+            merged_labels = {}  # name -> en yüksek confidence
+
+            for i, frame_bytes in enumerate(frames, 1):
+                frame_key, _ = upload_bytes_to_s3(
+                    frame_bytes, f"frames/{uuid.uuid4().hex}_frame{i}.jpg"
+                )
+                frame_labels = detect_labels(bucket_name, frame_key, max_labels=10)
+
+                # Her nesnenin en yüksek güven oranını sakla
+                for lbl in frame_labels:
+                    name = lbl["name"]
+                    if name not in merged_labels or lbl["confidence"] > merged_labels[name]["confidence"]:
+                        merged_labels[name] = lbl
+
+            # Güven oranına göre sırala, en fazla 15 nesne
+            results["labels"] = sorted(
+                merged_labels.values(),
+                key=lambda x: x["confidence"],
+                reverse=True
+            )[:15]
 
         return render_template("result.html", results=results)
 
@@ -126,10 +142,11 @@ def analyze():
 def video_status(job_id):
     """Video analiz durumunu kontrol eder (AJAX endpoint)."""
     try:
-        status, labels = get_video_label_results(job_id)
+        status, labels, error_message = get_video_label_results(job_id)
         return jsonify({
             "status": status,
-            "labels": labels
+            "labels": labels,
+            "error": error_message
         })
     except Exception as e:
         return jsonify({"status": "ERROR", "error": str(e)}), 500

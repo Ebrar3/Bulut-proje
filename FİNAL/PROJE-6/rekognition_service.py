@@ -171,7 +171,7 @@ def get_video_label_results(job_id):
     Video analiz işinin durumunu ve sonuçlarını getirir.
     
     Returns:
-        tuple: (status, labels)
+        tuple: (status, labels, error_message)
         status: "IN_PROGRESS" | "SUCCEEDED" | "FAILED"
     """
     response = rekognition_client.get_label_detection(
@@ -180,6 +180,8 @@ def get_video_label_results(job_id):
     )
 
     status = response["JobStatus"]
+    error_message = response.get("StatusMessage", "")
+    print(f"[VIDEO STATUS] {status} — {error_message}")  # Log için
     labels = []
 
     if status == "SUCCEEDED":
@@ -202,7 +204,7 @@ def get_video_label_results(job_id):
 
         labels = sorted(seen_labels.values(), key=lambda x: x["confidence"], reverse=True)
 
-    return status, labels
+    return status, labels, error_message
 
 
 def _label_to_emoji(label_name):

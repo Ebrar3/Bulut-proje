@@ -1,0 +1,6 @@
+# Gizli bilgiler - GitHub'a yükleme!
+.env
+__pycache__/
+*.pyc
+*.pyo
+uploads/
